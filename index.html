@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Infinity Rewards Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.9.0/dist/web3.min.js"></script>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 80%;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+     background: linear-gradient(-45deg, rgba(15, 12, 41, 0.85), rgba(48, 43, 99, 0.85), rgba(36, 36, 62, 0.85)), 
+                url('logo-og.jpg') no-repeat center center fixed; 
+    background-size: cover;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.container {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    color: white;
+    padding: 20px;
+    margin-top: 100px;
+}
+
+input, button {
+    border: 2px solid #ddd;
+    background-color: transparent;
+    color: white;
+}
+
+button {
+    background-color: #622774;
+    border-color: #622774;
+}
+
+button:hover {
+    background-color: #914e89;
+}
+
+#result {
+    margin-top: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>∞ Rewards Tracker</h1>
+        <input type="text" id="ethereumAddress" placeholder="Enter Wallet Address"/>
+        <button id="getRewards">Check Rewards</button>
+        <div id="result"></div>
+
+        <button id="copyNoNukes" onclick="copyToClipboard('0x174a0ad99c60c20d9b3d94c3095bc1fb9ddefd62')">Copy No Nukes CA</button>
+        <button id="copyBFF" onclick="copyToClipboard('0xe35a842eb1edca4c710b6c1b1565ce7df13f5996')">Copy BFF CA</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            if (typeof web3 !== 'undefined') {
+                web3 = new Web3(web3.currentProvider);
+            } else {
+                web3 = new Web3(new Web3.providers.HttpProvider('https://rpc-pulsechain.g4mm4.io'));
+            }
+
+            const abi = [
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_router",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_rwdToken",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "RWRD",
+        "outputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "claimDividend",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "deposit",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "dividendsPerShare",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "dividendsPerShareAccuracyFactor",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "shareholder",
+                "type": "address"
+            }
+        ],
+        "name": "getUnpaidEarnings",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "minDistribution",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "minPeriod",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gas",
+                "type": "uint256"
+            }
+        ],
+        "name": "process",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_minPeriod",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_minDistribution",
+                "type": "uint256"
+            }
+        ],
+        "name": "setDistributionCriteria",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "shareholder",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "setShare",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "shares",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalExcluded",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalRealised",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalDistributed",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalDividends",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalShares",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+];
+            const distributor0Address = '0x5EAf4138B180F4538fAf1cA091cca17429523F1f';
+            const distributor1Address = '0x2A0E9e1c4422c187437bf5FB7Dc193aB9B335aB2';
+
+            $('#getRewards').click(function() {
+                const userAddress = $('#ethereumAddress').val();
+                if (!web3.utils.isAddress(userAddress)) {
+                    alert("Please enter a valid wallet address.");
+                    return;
+                }
+
+                $('#result').empty();
+                getRewardsForDistributor(distributor0Address, userAddress, "BFF", 'https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x163088ca79b196bac86295041e69536e9a3d9da4');
+                getRewardsForDistributor(distributor1Address, userAddress, "No Nukes", 'https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xed294c22afe9dd19a3af7a6c97cf463328ee790b');
+            });
+
+            function getRewardsForDistributor(distributorAddress, userAddress, distributorName, apiURL) {
+                const contract = new web3.eth.Contract(abi, distributorAddress);
+                contract.methods.shares(userAddress).call()
+                    .then(function(result) {
+                        const totalRealised = result.totalRealised;
+                        const formattedTotalRealised = totalRealised / Math.pow(10, 18);
+
+                        fetch(apiURL)
+                            .then(response => response.json())
+                            .then(data => {
+                                const usdValue = formattedTotalRealised * data.pairs[0].priceUsd;
+                                $('#result').append(`${distributorName} Rewards: ${formattedTotalRealised.toFixed(18)} Tokens (${usdValue.toFixed(2)} USD)<br>`);
+                            })
+                            .catch(error => console.error('Error fetching USD value:', error));
+                    })
+                    .catch(function(error) {
+                        console.error("Error:", error);
+                        $('#result').append(`${distributorName} Rewards: An error occurred. Please try again.<br>`);
+                    });
+            }
+
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(function() {
+                    alert('Contract address copied to clipboard');
+                }, function(err) {
+                    console.error('Could not copy text: ', err);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
